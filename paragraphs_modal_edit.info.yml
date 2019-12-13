@@ -5,5 +5,5 @@ description: Functionality for the editing paragraphs in a Drupal modal/dialog
 core: 8.x
 core_version_requirement: ^8 || ^9
 dependencies:
-  - paragraphs
-  - paragraphs_edit
+  - paragraphs:paragraphs
+  - paragraphs_edit:paragraphs_edit
