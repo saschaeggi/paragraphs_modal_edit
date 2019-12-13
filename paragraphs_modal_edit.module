@@ -43,6 +43,9 @@ function paragraphs_modal_edit_form_paragraph_form_alter(&$form, FormStateInterf
   }
 }
 
+/**
+ * Ajax callback for the modal save action.
+ */
 function paragraphs_modal_edit_paragraph_form_ajax_update(&$form, FormStateInterface $form_state) {
   if (!$form_state->getErrors()) {
     $response = new AjaxResponse();
@@ -54,12 +57,20 @@ function paragraphs_modal_edit_paragraph_form_ajax_update(&$form, FormStateInter
       /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
       $paragraph = $callbackObject->getEntity();
 
+      // Check if the paragraph we render here is the latest revision.
+      // If not, load and render it.
+      $storage = Drupal::entityTypeManager()->getStorage('paragraph');
+      $latestRevisionId = $storage->getLatestRevisionId($paragraph->id());
+      $loadedRevisionId = (int) $paragraph->getLoadedRevisionId();
+      if ($latestRevisionId != $loadedRevisionId) {
+        $paragraph = $storage->loadRevision($latestRevisionId);
+      }
+
       $paragraphViewArr = Drupal::entityTypeManager()->getViewBuilder('paragraph')->view($paragraph);
       $renderedParagraph = Drupal::service('renderer')->render($paragraphViewArr);
 
       $response->addCommand(new \Drupal\Core\Ajax\ReplaceCommand('[data-quickedit-entity-id="paragraph/' . $paragraph->id() . '"]', $renderedParagraph));
     }
-
 
     return $response;
   }
@@ -91,7 +102,6 @@ function paragraphs_modal_edit_paragraph_form_ajax_remove(&$form, FormStateInter
   return $form;
 }
 
-
 function paragraphs_modal_edit_paragraph_form_ajax_cancel(&$form, FormStateInterface $form_state) {
   if (!$form_state->getErrors()) {
     $response = new AjaxResponse();
@@ -114,7 +124,6 @@ function paragraphs_modal_edit_contextual_links_view_alter(&$element, $items) {
       $link['attributes']['class'][] = 'use-ajax';
     }
   }
-
 }
 
 /**
